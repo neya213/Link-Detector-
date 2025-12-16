@@ -48,4 +48,3 @@ if __name__ == "__main__":
             print("Exiting DFA Machine...")
             break
 
-#comment hi basdbgaksdfasdf
