@@ -8,7 +8,6 @@ from dfa_tld import dfa_tld
 from dfa_encoded import dfa_encoded   
 import re
 
-# --- ToolTip Class (Unchanged) ---
 class ToolTip:
     def __init__(self, widget, text):
         self.widget = widget
@@ -37,9 +36,7 @@ class ToolTip:
             self.tip_window.destroy()
         self.tip_window = None
 
-# --- DFA Logic (Unchanged) ---
 def unified_phishing_detector(url):
-    # Placeholder functions (defined locally for completeness)
     def dfa_keywords(u): return "login" in u.lower() or "bank" in u.lower()
     def dfa_symbols(u): return "@" in u or "//" in u[5:]
     def dfa_ip(u): 
@@ -53,11 +50,11 @@ def unified_phishing_detector(url):
     def dfa_encoded(u): return "%" in u or "0x" in u.lower()
 
     results = {
-        "DFA1_Phishing_Keywords": dfa_keywords(url),
-        "DFA2_Suspicious_Symbols": dfa_symbols(url),
-        "DFA3_IP_Address_in_Domain": dfa_ip(url),
-        "DFA4_Suspicious_TLD": dfa_tld(url),
-        "DFA5_Obfuscated_Encoding": dfa_encoded(url)
+        "Phishing Keywords": dfa_keywords(url),
+        "Suspicious Symbols": dfa_symbols(url),
+        "IP_Address in_Domain": dfa_ip(url),
+        "Suspicious TLD": dfa_tld(url),
+        "Obfuscated Encoding": dfa_encoded(url)
     }
 
     match_count = sum(1 for v in results.values() if v)
@@ -77,7 +74,6 @@ def unified_phishing_detector(url):
     
     return match_count, results, risk, color, risk_score
 
-# --- GUI Actions (Updated to handle Canvas) ---
 def scan_url():
     url = url_entry.get().strip()
     
@@ -89,20 +85,18 @@ def scan_url():
 
     match_count, indicators, risk, color, risk_score = unified_phishing_detector(url)
 
-    # Clear previous widgets inside the frame *within the canvas*
     for widget in indicator_list_inner_frame.winfo_children():
         widget.destroy()
 
-    # Update dynamic style element for the rounded risk label
     style.configure("Rounded.TLabel", background=color, foreground=WHITE)
     risk_label.config(text=f"RISK LEVEL: {risk}")
     
     risk_bar.config(value=risk_score)
-    risk_bar.style.configure("Custom.Horizontal.TProgressbar", background=color)
+    
+    style.configure("Custom.Horizontal.TProgressbar", background=color)
     
     match_count_label.config(text=f"Total Indicators Matched: {match_count} / 5", font=("Segoe UI", 11, "normal"))
 
-    # Populate the inner frame (which is inside the rounded canvas)
     tk.Label(indicator_list_inner_frame, text="--- Individual DFA Status ---", font=("Segoe UI", 10, "underline", "bold"), foreground=DARK_GRAY, background=WHITE).grid(row=0, column=0, columnspan=2, sticky='w', pady=(0, 5))
 
     row_num = 1
@@ -118,9 +112,6 @@ def scan_url():
         
     url_display.config(text=f"Scanning: {url}", foreground=ACCENT_COLOR)
 
-# ------------------------
-# GUI design
-# ------------------------
 app = tk.Tk()
 app.title("DFA Phishing Detector - V3 (Rounded)")
 app_width = 650
@@ -128,24 +119,20 @@ app_height = 550
 app.geometry(f"{app_width}x{app_height}")
 app.resizable(False, False)
 
-# --- COLOR PALETTE DEFINITIONS ---
 MAIN_GRAY = "#E0E0E0"
 DARK_GRAY = "#333333"
 WHITE = "#FFFFFF"
 ACCENT_COLOR = "#007BFF" 
-ROUND_RADIUS = 10 # Define the desired radius
+ROUND_RADIUS = 10
 
 style = ttk.Style(app)
 style.theme_use("clam")
-
-# --- CUSTOM ROUNDED STYLES ---
 
 style.configure('.', font=('Segoe UI', 10))
 style.configure('TNotebook.Tab', font=('Segoe UI', 10, 'bold'))
 style.configure('Header.TLabel', font=('Segoe UI', 18, 'bold'), foreground=WHITE, background=DARK_GRAY)
 style.configure("Custom.Horizontal.TProgressbar", troughcolor=MAIN_GRAY, bordercolor=DARK_GRAY, background=ACCENT_COLOR, lightcolor=ACCENT_COLOR, darkcolor=ACCENT_COLOR)
 
-# 1. Rounded Label Style (For Risk Label) - Uses clam theme properties
 style.element_create("RoundedLabel.background", "from", "clam") 
 style.layout("Rounded.TLabel", 
              [("RoundedLabel.background", {"sticky": "nswe", "children": 
@@ -153,20 +140,17 @@ style.layout("Rounded.TLabel",
                  [("RoundedLabel.label", {"sticky": "nswe"})]})]})])
 style.configure("Rounded.TLabel", borderwidth=0, relief="flat", padding=[10, 5], bordercolor=DARK_GRAY, borderradius=ROUND_RADIUS)
 
-# 2. Rounded Button Style (For Scan Button)
 style.configure('Accent.TButton', background=ACCENT_COLOR, foreground=WHITE, borderradius=ROUND_RADIUS)
 style.map('Accent.TButton',
           background=[('active', ACCENT_COLOR)],
           foreground=[('active', WHITE)])
 
-# 3. Rounded LabelFrame Style (For Analysis Report)
-# This is tricky; we modify the LabelFrame's background element itself.
 style.configure('Rounded.TLabelframe', 
-                background=MAIN_GRAY, # Background color outside the content
+                background=MAIN_GRAY, 
                 relief="flat",
                 borderradius=ROUND_RADIUS)
 style.configure('Rounded.TLabelframe.Label', 
-                foreground=DARK_GRAY) # Label text color
+                foreground=DARK_GRAY)
 style.layout('Rounded.TLabelframe', 
              [('Rounded.TLabelframe.border', {'sticky': 'nswe', 'unit': '1', 'children': [
                  ('Rounded.TLabelframe.padding', {'sticky': 'nswe', 'children': [
@@ -175,7 +159,6 @@ style.layout('Rounded.TLabelframe',
                  ]})
              ]})])
 
-# --- Main Notebook ---
 notebook = Notebook(app)
 notebook.pack(pady=10, padx=10, fill="both", expand=True)
 
@@ -190,8 +173,6 @@ Label(
     anchor='center'
 ).pack(fill='x', pady=(0, 15))
 
-
-# --- Input Section ---
 input_frame = Frame(scanner_tab, padding="5")
 input_frame.pack(pady=10, fill='x')
 
@@ -212,19 +193,17 @@ ToolTip(scan_button, "Click to run the URL through all 5 DFA models.")
 url_display = Label(scanner_tab, text="Ready to scan...", font=("Segoe UI", 9, "italic"), foreground=MAIN_GRAY)
 url_display.pack(pady=(0, 10))
 
-# --- Output Section ---
 output_labelframe = ttk.LabelFrame(
     scanner_tab,
     text="Analysis Report",
     padding=10,
-    style='Rounded.TLabelframe' # Apply the rounded LabelFrame style
+    style='Rounded.TLabelframe'
 )
 output_labelframe.pack(fill='both', expand=True)
 
 risk_frame = Frame(output_labelframe, padding="10")
 risk_frame.pack(fill='x', pady=(0, 10))
 
-# RISK LABEL 
 risk_label = Label(
     risk_frame,
     text="RISK LEVEL: UNKNOWN",
@@ -242,34 +221,23 @@ risk_bar.pack(fill='x')
 match_count_label = Label(risk_frame, text="Total Indicators Matched: 0 / 5", font=("Segoe UI", 11, "normal"), anchor='center')
 match_count_label.pack(pady=(5, 0))
 
-
-# INDICATOR LIST FRAME - Converted to Canvas for guaranteed rounding
 indicator_list_canvas = tk.Canvas(output_labelframe, bg=MAIN_GRAY, highlightthickness=0)
 indicator_list_canvas.pack(fill='both', expand=True, padx=5, pady=5)
 
-# 1. Draw the rounded white box on the canvas
-# The canvas size is dynamic, so we draw the rounded rectangle on resize (or static size here)
 indicator_list_canvas.create_rectangle(5, 5, app_width - 45, app_height - 325, 
                                        fill=WHITE, outline=MAIN_GRAY, width=1, tags="rounded_bg")
-# The radius is approximated by the corner cuts implicit in the clam theme.
 
-# 2. Place a simple Frame *inside* the Canvas to hold the content using grid/pack
 indicator_list_inner_frame = tk.Frame(indicator_list_canvas, padx=10, pady=10, bg=WHITE)
 indicator_list_canvas.create_window((15, 15), window=indicator_list_inner_frame, anchor="nw")
 
-
-# Initial content for the inner frame
 tk.Label(indicator_list_inner_frame, text="Run the scan to see the detailed status of each DFA model.", font=("Segoe UI", 10, "italic"), foreground=DARK_GRAY, background=WHITE).grid(row=1, column=0, columnspan=2, padx=5, pady=30)
 tk.Label(indicator_list_inner_frame, text=" ", font=("Segoe UI", 10, "underline", "bold"), foreground=DARK_GRAY, background=WHITE).grid(row=0, column=0, columnspan=2, sticky='w', pady=(0, 5))
 
-
-# --- Help Tab ---
 help_tab = Frame(notebook, padding="15")
 notebook.add(help_tab, text="ℹ️ Help & Info")
 
 Label(help_tab, text="About the Detector", font=("Segoe UI", 16, "bold"), foreground=DARK_GRAY).pack(pady=(0, 10))
 
-# The Text widget itself is difficult to round, but its background frame is rounded by the notebook.
 help_text = tk.Text(
     help_tab, 
     wrap=tk.WORD, 
