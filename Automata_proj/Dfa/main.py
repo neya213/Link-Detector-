@@ -113,7 +113,7 @@ def scan_url():
     url_display.config(text=f"Scanning: {url}", foreground=ACCENT_COLOR)
 
 app = tk.Tk()
-app.title("DFA Phishing Detector - V3 (Rounded)")
+app.title("Phishing Detector")
 app_width = 650
 app_height = 550
 app.geometry(f"{app_width}x{app_height}")
@@ -168,7 +168,7 @@ notebook.add(scanner_tab, text="🔍 Phishing Scanner")
 
 Label(
     scanner_tab,
-    text="DFA URL Analysis System",
+    text="Link Analysis System",
     style='Header.TLabel',
     anchor='center'
 ).pack(fill='x', pady=(0, 15))
