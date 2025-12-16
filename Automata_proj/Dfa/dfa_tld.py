@@ -1,4 +1,32 @@
-SUSPICIOUS_TLDS = ["xyz", "top", "click", "online", "site", "loan", "win", "gq", "cf", "tk", "shop"]
+SUSPICIOUS_TLDS = [
+    ".xyz",
+    ".top",
+    ".click",
+    ".link",
+    ".live",
+    ".online",
+    ".site",
+    ".info",
+    ".zip",
+    ".tk",
+    ".ml",
+    ".ga",
+    ".cf",
+    ".gq",
+    ".icu",
+    ".support",
+    ".review",
+    ".country",
+    ".stream",
+    ".loan",
+    ".money",
+    ".account",
+    ".bank",
+    ".app",
+    ".cloud",
+    ".service",
+]
+
 
 def dfa_tld(text):
     text_lower = text.lower()
