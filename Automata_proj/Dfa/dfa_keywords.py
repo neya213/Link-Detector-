@@ -64,5 +64,5 @@ def dfa_keywords(text):
     for keyword in SUSPICIOUS_KEYWORDS:
         if keyword in text_lower:
             return True  
-    
+    return False
 
