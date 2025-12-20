@@ -1,19 +1,22 @@
 def dfa_symbols(text):
-    text_lower = text.lower()
+    text = text.lower().strip()
 
-    if '..' in text_lower or '--' in text_lower:
+    if ".." in text or "--" in text or ".-." in text:
         return True
-    
-    if '.-.' in text_lower:
-        return True
-    
-    if '://' in text_lower:
-        domain = text_lower.split('://')[1].split('/')[0]
+
+    if "://" in text:
+        domain = text.split("://", 1)[1].split("/", 1)[0]
     else:
-        domain = text_lower.split('/')[0]
-    
-    dot_count = domain.count('.')
-    if dot_count > 3:
+        domain = text.split("/", 1)[0]
+
+    domain = domain.split(":", 1)[0]
+
+    if domain.count(".") > 3:
         return True
-    
-    return False 
+
+    labels = domain.split(".")
+    for label in labels:
+        if label.count("-") > 2:
+            return True
+
+    return False
