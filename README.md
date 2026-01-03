@@ -117,5 +117,5 @@ npm run dev
 ---
 
 ## 👥 Team
-Frontend: James Agbon, John Timothy Dela Cruz, Simon Rito
-Backend: James Agbon, Clarence Ignacio
+**Frontend:** James Agbon, John Timothy Dela Cruz, Simon Rito
+**Backend:** James Agbon, Clarence Ignacio
