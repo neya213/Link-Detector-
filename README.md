@@ -49,7 +49,7 @@ This starts the FastAPI server on port 8000.
 1. Open your **first terminal window**.
 2. Navigate to the backend folder:
 ```bash
-cd Backend
+cd Backend\Dfa
 ```
 
 3. Install dependencies (only required the first time):
@@ -72,7 +72,7 @@ This starts the website, usually on port 3000.
 1. Open a **new, second terminal window** (keep the backend running!).
 2. Navigate to the **project root** (where `package.json` is):
 ```bash
-cd C:\Link-Detector-
+cd Frontend
 ```
 
 3. Install dependencies (only required the first time):
