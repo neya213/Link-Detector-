@@ -1,9 +1,13 @@
+from typing import TypedDict
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, validator
-from detector import unified_phishing_detector
-from dfa_keywords import SUSPICIOUS_KEYWORDS
+from .detector import SuspiciousFlags, unified_phishing_detector
+from .dfa_keywords import SUSPICIOUS_KEYWORDS
 from urllib.parse import urlparse
+
+import requests as client
+
 
 app = FastAPI(
     title="Phishing URL Detector API",
@@ -69,8 +73,16 @@ def is_valid_url(url: str) -> bool:
     except Exception:
         return False
 
+class ScanResult(TypedDict):
+    url: str
+    is_suspicious: bool
+    risk_level: str
+    suspicious_flags: SuspiciousFlags
+    matched_keywords: list[str] | None
+    has_redirects: bool
+
 @app.post("/scan")
-async def scan_url(request: URLRequest):
+async def scan_url(request: URLRequest) -> ScanResult:
     """
     Scan a URL for phishing indicators with complete DFA state visualization.
     
@@ -85,9 +97,19 @@ async def scan_url(request: URLRequest):
         if not is_valid_url(request.url):
             raise HTTPException(status_code=500, detail="Error scanning URL: The URL provided is not a valid URL.")
 
-        matches, indicators, risk = unified_phishing_detector(request.url)
+        final_url: str = request.url
+        has_redirects = False
+        try:
+            headers = {"User-Agent": "Mozilla/5.0"}
+            response = client.get(request.url, headers=headers, timeout=(2, 3)) # getting the long links from short links
+            has_redirects = True
+            final_url = response.url
+        except:
+            pass
+
+        matches, indicators, risk = unified_phishing_detector(final_url)
         
-        matched_keywords = []
+        matched_keywords: list[str] = []
         text_lower = request.url.lower()
         for keyword in SUSPICIOUS_KEYWORDS:
             if keyword in text_lower:
@@ -103,14 +125,9 @@ async def scan_url(request: URLRequest):
             "url": request.url,
             "is_suspicious": matches > 0,
             "risk_level": risk_level_map.get(risk, "medium"),
-            "suspicious_flags": {
-                "has_suspicious_keywords": indicators.get("Suspicious Keywords", False),
-                "has_symbol_abuse": indicators.get("Symbol Abuse", False),
-                "has_ip_address": indicators.get("IP-Based URL", False),
-                "has_suspicious_tld": indicators.get("Suspicious TLD", False),
-                "has_encoded_chars": indicators.get("Encoded Characters", False)
-            },
+            "suspicious_flags": indicators,
             "matched_keywords": matched_keywords if matched_keywords else None,
+            "has_redirects": has_redirects
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error scanning URL: {str(e)}")

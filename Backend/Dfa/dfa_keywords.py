@@ -1,4 +1,4 @@
-SUSPICIOUS_KEYWORDS = ["verify","verification","secure",
+SUSPICIOUS_KEYWORDS: list[str] = ["verify","verification","secure",
     "security","login","log-in","signin","sign-in","reset",
     "recover","recovery","update","confirm","authentication",
     "authorize","urgent","immediately","alert","warning",
@@ -12,8 +12,7 @@ SUSPICIOUS_KEYWORDS = ["verify","verification","secure",
 ]
 
 
-def dfa_keywords(text):
-
+def dfa_keywords(text: str):
     text_lower = text.lower()
     
     for keyword in SUSPICIOUS_KEYWORDS:

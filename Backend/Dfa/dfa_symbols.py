@@ -1,17 +1,30 @@
-def dfa_symbols(text):
+
+SUSPICIOUS_SYMBOLS = [
+    "..", "--", ".-.", "<", ">", "@", "~", "+", "%", "?", "&"
+]
+
+def suspicious_symbols_checker(text: str) -> bool:
+    """
+    Checks a URL for suspicious symbols and patterns.
+    Returns True if any suspicious patterns are found.
+    """
     text = text.lower().strip()
 
-    if ".." in text or "--" in text or ".-." in text:
-        return True
+    for symbol in SUSPICIOUS_SYMBOLS:
+        if symbol in text:
+            return True
 
+    # extract domain
     if "://" in text:
         domain = text.split("://", 1)[1].split("/", 1)[0]
     else:
         domain = text.split("/", 1)[0]
 
+    # remove port if present
     domain = domain.split(":", 1)[0]
 
-    if domain.count(".") > 3:
+    # check for too many subdomains
+    if domain.count(".") > 4:
         return True
 
     labels = domain.split(".")

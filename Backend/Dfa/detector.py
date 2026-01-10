@@ -1,26 +1,31 @@
-from dfa_keywords import dfa_keywords
-from dfa_symbols import dfa_symbols
-from dfa_ip import dfa_ip
-from dfa_tld import dfa_tld
-from dfa_encoded import dfa_encoded
+from typing import Literal, TypedDict
+from .dfa_keywords import dfa_keywords
+from .dfa_symbols import dfa_symbols
+from .dfa_ip import dfa_ip
+from .dfa_tld import dfa_tld
+from .dfa_encoded import dfa_encoded
 
 
-def unified_phishing_detector(url):
+class SuspiciousFlags(TypedDict):
+    has_suspicious_keywords: bool
+    has_symbol_abuse: bool
+    has_ip_address: bool
+    has_suspicious_tld: bool
+    has_encoded_chars: bool
+
+def unified_phishing_detector(url: str) -> tuple[int, SuspiciousFlags, Literal["SAFE", "SUSPICIOUS", "HIGH RISK / PHISHING"]]:
     """
     Analyzes a URL for phishing indicators using DFA-based detection methods.
-    
-    Returns:
-        tuple: (match_count, results_dict, risk_level)
     """
-    results = {
-        "Suspicious Keywords": dfa_keywords(url),
-        "Symbol Abuse": dfa_symbols(url),
-        "IP-Based URL": dfa_ip(url),
-        "Suspicious TLD": dfa_tld(url),
-        "Encoded Characters": dfa_encoded(url)
-    }
+    results: SuspiciousFlags = SuspiciousFlags(
+        has_suspicious_keywords=dfa_keywords(url),
+        has_symbol_abuse=dfa_symbols(url),
+        has_ip_address=dfa_ip(url),
+        has_suspicious_tld=dfa_tld(url),
+        has_encoded_chars=dfa_encoded(url)
+    )
 
-    match_count = sum(results.values())
+    match_count = sum(1 for v in results.values() if v)
 
     if match_count == 0:
         risk = "SAFE"
