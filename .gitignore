@@ -1,1 +1,7 @@
-node_modules
+
+.git
+Backend/venv
+Backend/Dfa/__pycache__
+Frontend/.next
+Frontend/node_modules
+

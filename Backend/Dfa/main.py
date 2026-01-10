@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, validator
 from detector import unified_phishing_detector
 from dfa_keywords import SUSPICIOUS_KEYWORDS
+from urllib.parse import urlparse
 
 app = FastAPI(
     title="Phishing URL Detector API",
@@ -56,6 +57,18 @@ async def health_check():
     return {"status": "healthy", "service": "phishing-detector"}
 
 
+
+# the main focus of this project is the detection, using a library is okay.
+def is_valid_url(url: str) -> bool:
+    try:
+        result = urlparse(url)
+        return all([
+            result.scheme in ("http", "https"),
+            result.netloc != "",
+        ])
+    except Exception:
+        return False
+
 @app.post("/scan")
 async def scan_url(request: URLRequest):
     """
@@ -69,7 +82,10 @@ async def scan_url(request: URLRequest):
     - DFA state transitions for each detector (for automata theory demonstration)
     """
     try:
-        matches, indicators, risk, dfa_visualizations = unified_phishing_detector(request.url)
+        if not is_valid_url(request.url):
+            raise HTTPException(status_code=500, detail="Error scanning URL: The URL provided is not a valid URL.")
+
+        matches, indicators, risk = unified_phishing_detector(request.url)
         
         matched_keywords = []
         text_lower = request.url.lower()
@@ -95,7 +111,6 @@ async def scan_url(request: URLRequest):
                 "has_encoded_chars": indicators.get("Encoded Characters", False)
             },
             "matched_keywords": matched_keywords if matched_keywords else None,
-            "dfa_analysis": dfa_visualizations
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error scanning URL: {str(e)}")

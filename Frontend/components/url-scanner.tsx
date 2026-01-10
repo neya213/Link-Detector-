@@ -1,53 +1,67 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Spinner } from "@/components/ui/spinner"
-import { Shield, AlertTriangle, CheckCircle2, XCircle, Search, ChevronRight, Activity } from "lucide-react"
-import { toast } from "sonner"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Search,
+  ChevronRight,
+  Activity,
+} from "lucide-react";
+import { toast } from "sonner";
 
 interface DFAAnalysis {
-  dfa_name: string
-  result: boolean
-  states_visited: string[]
-  final_state: string
-  matched_pattern?: string
+  dfa_name: string;
+  result: boolean;
+  states_visited: string[];
+  final_state: string;
+  matched_pattern?: string;
 }
 
 interface ScanResult {
-  url: string
-  is_suspicious: boolean
-  risk_level: "safe" | "low" | "medium" | "high"
+  url: string;
+  is_suspicious: boolean;
+  risk_level: "safe" | "low" | "medium" | "high";
   suspicious_flags: {
-    has_suspicious_keywords: boolean
-    has_symbol_abuse: boolean
-    has_ip_address: boolean
-    has_suspicious_tld: boolean
-    has_encoded_chars: boolean
-  }
-  matched_keywords?: string[]
-  dfa_analysis: DFAAnalysis[]
+    has_suspicious_keywords: boolean;
+    has_symbol_abuse: boolean;
+    has_ip_address: boolean;
+    has_suspicious_tld: boolean;
+    has_encoded_chars: boolean;
+  };
+  matched_keywords?: string[];
+  // dfa_analysis: DFAAnalysis[]; NOTHING ON BACKEND YET ABOUT VISUALIZATIONS.
 }
 
 export function UrlScanner() {
-  const [url, setUrl] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<ScanResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<ScanResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleScan = async () => {
     if (!url.trim()) {
-      toast.error("Please enter a URL to scan")
-      return
+      toast.error("Please enter a URL to scan");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    setResult(null)
+    setLoading(true);
+    setError(null);
+    setResult(null);
 
     try {
       const response = await fetch("http://localhost:8000/scan", {
@@ -56,66 +70,68 @@ export function UrlScanner() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ url: url.trim() }),
-      })
+      });
+
+      console.log(response);
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || "Failed to scan URL")
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to scan URL");
       }
 
-      const data = await response.json()
-      setResult(data)
+      const data = await response.json();
+      setResult(data);
 
       if (data.is_suspicious) {
         toast.warning("Suspicious URL detected!", {
           description: `Risk level: ${data.risk_level.toUpperCase()}`,
-        })
+        });
       } else {
         toast.success("URL appears safe", {
           description: "No suspicious patterns detected",
-        })
+        });
       }
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : "Failed to scan URL. Make sure the backend is running on http://localhost:8000"
-      setError(message)
-      toast.error("Scan failed", { description: message })
+          : "Failed to scan URL. Make sure the backend is running on http://localhost:8000";
+      setError(message);
+      toast.error("Scan failed", { description: message });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getRiskColor = (level: string) => {
     switch (level) {
       case "safe":
-        return "text-accent"
+        return "text-accent";
       case "low":
-        return "text-yellow-500"
+        return "text-yellow-500";
       case "medium":
-        return "text-orange-500"
+        return "text-orange-500";
       case "high":
-        return "text-destructive"
+        return "text-destructive";
       default:
-        return "text-muted-foreground"
+        return "text-muted-foreground";
     }
-  }
+  };
 
   const getRiskIcon = (level: string) => {
     switch (level) {
       case "safe":
-        return <CheckCircle2 className="h-6 w-6" />
+        return <CheckCircle2 className="h-6 w-6" />;
       case "low":
-        return <Shield className="h-6 w-6" />
+        return <Shield className="h-6 w-6" />;
       case "medium":
-        return <AlertTriangle className="h-6 w-6" />
+        return <AlertTriangle className="h-6 w-6" />;
       case "high":
-        return <XCircle className="h-6 w-6" />
+        return <XCircle className="h-6 w-6" />;
       default:
-        return <Shield className="h-6 w-6" />
+        return <Shield className="h-6 w-6" />;
     }
-  }
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -126,7 +142,9 @@ export function UrlScanner() {
             <Search className="h-5 w-5 text-primary" />
             URL Security Scanner
           </CardTitle>
-          <CardDescription>Enter a URL to analyze using parallel DFA pattern matching</CardDescription>
+          <CardDescription>
+            Enter a URL to analyze using parallel DFA pattern matching
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -138,7 +156,12 @@ export function UrlScanner() {
               className="font-mono text-base"
               disabled={loading}
             />
-            <Button onClick={handleScan} disabled={loading} size="lg" className="min-w-[120px]">
+            <Button
+              onClick={handleScan}
+              disabled={loading}
+              size="lg"
+              className="min-w-[120px]"
+            >
               {loading ? (
                 <>
                   <Spinner className="h-4 w-4 mr-2" />
@@ -170,17 +193,26 @@ export function UrlScanner() {
           >
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-                <div className={`${getRiskColor(result.risk_level)} mt-1`}>{getRiskIcon(result.risk_level)}</div>
+                <div className={`${getRiskColor(result.risk_level)} mt-1`}>
+                  {getRiskIcon(result.risk_level)}
+                </div>
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="text-2xl font-bold">
-                      {result.is_suspicious ? "Suspicious URL Detected" : "URL Appears Safe"}
+                      {result.is_suspicious
+                        ? "Suspicious URL Detected"
+                        : "URL Appears Safe"}
                     </h3>
-                    <Badge variant={result.is_suspicious ? "destructive" : "default"} className="text-sm px-3 py-1">
+                    <Badge
+                      variant={result.is_suspicious ? "destructive" : "default"}
+                      className="text-sm px-3 py-1"
+                    >
                       {result.risk_level.toUpperCase()} RISK
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground font-mono text-sm break-all">{result.url}</p>
+                  <p className="text-muted-foreground font-mono text-sm break-all">
+                    {result.url}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -199,10 +231,22 @@ export function UrlScanner() {
                   active={result.suspicious_flags.has_suspicious_keywords}
                   matches={result.matched_keywords}
                 />
-                <DetectionFlag label="Symbol Abuse" active={result.suspicious_flags.has_symbol_abuse} />
-                <DetectionFlag label="IP Address" active={result.suspicious_flags.has_ip_address} />
-                <DetectionFlag label="Suspicious TLD" active={result.suspicious_flags.has_suspicious_tld} />
-                <DetectionFlag label="Encoded Characters" active={result.suspicious_flags.has_encoded_chars} />
+                <DetectionFlag
+                  label="Symbol Abuse"
+                  active={result.suspicious_flags.has_symbol_abuse}
+                />
+                <DetectionFlag
+                  label="IP Address"
+                  active={result.suspicious_flags.has_ip_address}
+                />
+                <DetectionFlag
+                  label="Suspicious TLD"
+                  active={result.suspicious_flags.has_suspicious_tld}
+                />
+                <DetectionFlag
+                  label="Encoded Characters"
+                  active={result.suspicious_flags.has_encoded_chars}
+                />
               </div>
             </CardContent>
           </Card>
@@ -214,21 +258,36 @@ export function UrlScanner() {
                 <Activity className="h-5 w-5 text-primary" />
                 DFA State Analysis
               </CardTitle>
-              <CardDescription>State transitions and pattern matching for each automaton</CardDescription>
+              <CardDescription>
+                State transitions and pattern matching for each automaton
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <CardDescription>
+                Visualizations are a work-in-progress.
+              </CardDescription>
+              {/*
               {result.dfa_analysis.map((dfa, index) => (
                 <DFACard key={index} dfa={dfa} />
               ))}
+							*/}
             </CardContent>
           </Card>
         </>
       )}
     </div>
-  )
+  );
 }
 
-function DetectionFlag({ label, active, matches }: { label: string; active: boolean; matches?: string[] }) {
+function DetectionFlag({
+  label,
+  active,
+  matches,
+}: {
+  label: string;
+  active: boolean;
+  matches?: string[];
+}) {
   return (
     <div
       className={`p-4 rounded-lg border ${active ? "border-destructive/50 bg-destructive/5" : "border-border bg-card/30"}`}
@@ -251,7 +310,7 @@ function DetectionFlag({ label, active, matches }: { label: string; active: bool
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function DFACard({ dfa }: { dfa: DFAAnalysis }) {
@@ -261,16 +320,21 @@ function DFACard({ dfa }: { dfa: DFAAnalysis }) {
         <div>
           <h4 className="font-semibold font-mono text-sm">{dfa.dfa_name}</h4>
           <p className="text-xs text-muted-foreground mt-1">
-            Final State: <span className="font-mono text-foreground">{dfa.final_state}</span>
+            Final State:{" "}
+            <span className="font-mono text-foreground">{dfa.final_state}</span>
           </p>
         </div>
-        <Badge variant={dfa.result ? "destructive" : "secondary"}>{dfa.result ? "MATCH" : "NO MATCH"}</Badge>
+        <Badge variant={dfa.result ? "destructive" : "secondary"}>
+          {dfa.result ? "MATCH" : "NO MATCH"}
+        </Badge>
       </div>
 
       {dfa.matched_pattern && (
         <div className="mb-3 p-2 rounded bg-destructive/10 border border-destructive/20">
           <p className="text-xs text-muted-foreground">Pattern Matched:</p>
-          <p className="font-mono text-sm text-destructive">{dfa.matched_pattern}</p>
+          <p className="font-mono text-sm text-destructive">
+            {dfa.matched_pattern}
+          </p>
         </div>
       )}
 
@@ -282,11 +346,13 @@ function DFACard({ dfa }: { dfa: DFAAnalysis }) {
               <span className="px-2 py-1 rounded bg-primary/10 border border-primary/20 text-xs font-mono text-primary">
                 {state}
               </span>
-              {index < dfa.states_visited.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground mx-1" />}
+              {index < dfa.states_visited.length - 1 && (
+                <ChevronRight className="h-3 w-3 text-muted-foreground mx-1" />
+              )}
             </div>
           ))}
         </div>
       </div>
     </div>
-  )
+  );
 }
