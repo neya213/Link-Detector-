@@ -1,10 +1,10 @@
+import pprint
 from typing import Literal, TypedDict
-from .dfa_keywords import dfa_keywords
-from .dfa_symbols import dfa_symbols
-from .dfa_ip import dfa_ip
-from .dfa_tld import dfa_tld
-from .dfa_encoded import dfa_encoded
-
+from .dfa_keywords import dfa_keywords, KeywordDfaResult
+from .dfa_symbols import dfa_symbols, SymbolsDfaResult
+from .dfa_ip import dfa_ip, IPDfaResult
+from .dfa_tld import dfa_domain, DomainDfaResult
+from .dfa_encoded import dfa_encoded, EncodedDfaResult
 
 class SuspiciousFlags(TypedDict):
     has_suspicious_keywords: bool
@@ -13,25 +13,50 @@ class SuspiciousFlags(TypedDict):
     has_suspicious_tld: bool
     has_encoded_chars: bool
 
-def unified_phishing_detector(url: str) -> tuple[int, SuspiciousFlags, Literal["SAFE", "SUSPICIOUS", "HIGH RISK / PHISHING"]]:
+# TODO: refine unified_phishing_detector to pass the DfaResults in the frontend as well.
+
+def unified_phishing_detector(url: str) -> tuple[float, SuspiciousFlags, Literal["SAFE", "SUSPICIOUS", "HIGH RISK / PHISHING"]]:
     """
     Analyzes a URL for phishing indicators using DFA-based detection methods.
+    Returns: total_score, flags dict, verdict string
     """
-    results: SuspiciousFlags = SuspiciousFlags(
-        has_suspicious_keywords=dfa_keywords(url),
-        has_symbol_abuse=dfa_symbols(url),
-        has_ip_address=dfa_ip(url),
-        has_suspicious_tld=dfa_tld(url),
-        has_encoded_chars=dfa_encoded(url)
+
+    # run each dfa
+    keywords: KeywordDfaResult = dfa_keywords(url)
+    symbols: SymbolsDfaResult = dfa_symbols(url)
+    ip: IPDfaResult = dfa_ip(url)
+    domain: DomainDfaResult = dfa_domain(url)
+    encoded: EncodedDfaResult = dfa_encoded(url)
+
+    pprint.pprint(keywords)
+    pprint.pprint(symbols)
+    pprint.pprint(ip)
+    pprint.pprint(domain)
+    pprint.pprint(encoded)
+
+    total_score = (
+        keywords["risk_score"] +
+        symbols["risk_score"] +
+        ip["risk_score"] +
+        domain["risk_score"] +
+        len(encoded["high_risk"]) / 1.2
     )
 
-    match_count = sum(1 for v in results.values() if v)
+    flags: SuspiciousFlags = {
+        "has_suspicious_keywords": bool(keywords["risk_score"] > 0),
+        "has_symbol_abuse": bool(symbols["risk_score"] > 0),
+        "has_ip_address": bool(ip["risk_score"] > 0),
+        "has_suspicious_tld": bool(domain["risk_score"] > 0),
+        "has_encoded_chars": encoded["is_risky"]
+    }
 
-    if match_count == 0:
-        risk = "SAFE"
-    elif match_count <= 2:
-        risk = "SUSPICIOUS"
+    print(total_score)
+
+    if total_score == 0:
+        verdict: Literal["SAFE", "SUSPICIOUS", "HIGH RISK / PHISHING"] = "SAFE"
+    elif total_score <= 5:
+        verdict = "SUSPICIOUS"
     else:
-        risk = "HIGH RISK / PHISHING"
+        verdict = "HIGH RISK / PHISHING"
 
-    return match_count, results, risk
+    return total_score, flags, verdict

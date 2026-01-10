@@ -1,4 +1,9 @@
-def is_valid_ip(ip_str):
+
+
+from typing import TypedDict
+
+
+def is_valid_ip(ip_str: str):
     parts = ip_str.split(".")
     if len(parts) != 4:
         return False
@@ -16,8 +21,11 @@ def is_valid_ip(ip_str):
 
     return True
 
+class IPDfaResult(TypedDict):
+    ip: str
+    risk_score: float
 
-def dfa_ip(text):
+def dfa_ip(text: str) -> IPDfaResult:
     text = text.strip()
 
     if "://" in text:
@@ -27,4 +35,7 @@ def dfa_ip(text):
 
     host = host.split(":", 1)[0]
 
-    return is_valid_ip(host)
+    return IPDfaResult(
+        ip=host,
+        risk_score=5 if is_valid_ip(host) else 0
+    )

@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, validator
 from .detector import SuspiciousFlags, unified_phishing_detector
-from .dfa_keywords import SUSPICIOUS_KEYWORDS
+from .dfa_keywords import SUSPICIOUS_KEYWORDS_WEIGHTS
 from urllib.parse import urlparse
 
 import requests as client
@@ -101,17 +101,17 @@ async def scan_url(request: URLRequest) -> ScanResult:
         has_redirects = False
         try:
             headers = {"User-Agent": "Mozilla/5.0"}
-            response = client.get(request.url, headers=headers, timeout=(2, 3)) # getting the long links from short links
+            response = client.get(request.url, headers=headers, timeout=(2, 8)) # getting the long links from short links
             has_redirects = True
             final_url = response.url
-        except:
-            pass
+        except Exception as e:
+            print(f"Error: {e}")
 
         matches, indicators, risk = unified_phishing_detector(final_url)
         
         matched_keywords: list[str] = []
         text_lower = request.url.lower()
-        for keyword in SUSPICIOUS_KEYWORDS:
+        for keyword in SUSPICIOUS_KEYWORDS_WEIGHTS:
             if keyword in text_lower:
                 matched_keywords.append(keyword)
         

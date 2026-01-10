@@ -1,18 +1,24 @@
 
+from typing import TypedDict
+
+class SymbolsDfaResult(TypedDict):
+    risk_score: float
+    symbols: dict[str, int]
+
 SUSPICIOUS_SYMBOLS = [
-    "..", "--", ".-.", "<", ">", "@", "~", "+", "%", "?", "&"
+    "..", "--", ".-.", "<", ">", "@", "~", "+", "%"
 ]
 
-def suspicious_symbols_checker(text: str) -> bool:
-    """
-    Checks a URL for suspicious symbols and patterns.
-    Returns True if any suspicious patterns are found.
-    """
+def dfa_symbols(text: str) -> SymbolsDfaResult:
     text = text.lower().strip()
+    score = 0.0
+    matched_symbols: dict[str, int] = dict()
 
     for symbol in SUSPICIOUS_SYMBOLS:
-        if symbol in text:
-            return True
+        count = text.count(symbol)
+        if count:
+            matched_symbols[symbol] = count;
+            score += min(count * 1.0, 5.0)
 
     # extract domain
     if "://" in text:
@@ -23,13 +29,11 @@ def suspicious_symbols_checker(text: str) -> bool:
     # remove port if present
     domain = domain.split(":", 1)[0]
 
-    # check for too many subdomains
-    if domain.count(".") > 4:
-        return True
+    # normalize for long URLs
+    if len(text) > 50:
+        score /= (len(text) / 50) ** 0.3
 
-    labels = domain.split(".")
-    for label in labels:
-        if label.count("-") > 2:
-            return True
-
-    return False
+    return SymbolsDfaResult(
+        risk_score=round(score, 2),
+        symbols=matched_symbols
+    )
