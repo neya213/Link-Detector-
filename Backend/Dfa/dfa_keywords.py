@@ -71,7 +71,7 @@ def dfa_keywords(text: str) -> KeywordDfaResult:
     risk_score: float = 0.0
     
     for keyword, weight in SUSPICIOUS_KEYWORDS_WEIGHTS.items():
-        matches = re.findall(rf"\b{re.escape(keyword)}\b", text_lower)
+        matches = re.findall(re.escape(keyword), text_lower)
         count = len(matches)
         if count > 0:
             keywords[keyword] = count

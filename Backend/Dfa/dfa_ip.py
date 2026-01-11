@@ -22,7 +22,7 @@ def is_valid_ip(ip_str: str):
     return True
 
 class IPDfaResult(TypedDict):
-    ip: str
+    ip: str | None
     risk_score: float
 
 def dfa_ip(text: str) -> IPDfaResult:
@@ -36,6 +36,6 @@ def dfa_ip(text: str) -> IPDfaResult:
     host = host.split(":", 1)[0]
 
     return IPDfaResult(
-        ip=host,
+        ip=host if is_valid_ip(host) else None,
         risk_score=5 if is_valid_ip(host) else 0
     )

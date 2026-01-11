@@ -23,29 +23,8 @@ import {
   Activity,
 } from "lucide-react";
 import { toast } from "sonner";
-
-interface DFAAnalysis {
-  dfa_name: string;
-  result: boolean;
-  states_visited: string[];
-  final_state: string;
-  matched_pattern?: string;
-}
-
-interface ScanResult {
-  url: string;
-  is_suspicious: boolean;
-  risk_level: "safe" | "low" | "medium" | "high";
-  suspicious_flags: {
-    has_suspicious_keywords: boolean;
-    has_symbol_abuse: boolean;
-    has_ip_address: boolean;
-    has_suspicious_tld: boolean;
-    has_encoded_chars: boolean;
-  };
-  matched_keywords?: string[];
-  // dfa_analysis: DFAAnalysis[]; NOTHING ON BACKEND YET ABOUT VISUALIZATIONS.
-}
+import { ScanResult } from "@/components/types";
+import { HighlightedUrl } from "./highlighter";
 
 export function UrlScanner() {
   const [url, setUrl] = useState("");
@@ -72,25 +51,14 @@ export function UrlScanner() {
         body: JSON.stringify({ url: url.trim() }),
       });
 
-      console.log(response);
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to scan URL");
       }
 
-      const data = await response.json();
+      const data: ScanResult = await response.json();
+      console.log(data);
       setResult(data);
-
-      if (data.is_suspicious) {
-        toast.warning("Suspicious URL detected!", {
-          description: `Risk level: ${data.risk_level.toUpperCase()}`,
-        });
-      } else {
-        toast.success("URL appears safe", {
-          description: "No suspicious patterns detected",
-        });
-      }
     } catch (err) {
       const message =
         err instanceof Error
@@ -189,9 +157,9 @@ export function UrlScanner() {
         <>
           {/* Risk Overview */}
           <Card
-            className={`border-2 ${result.is_suspicious ? "border-destructive/50 bg-destructive/5" : "border-accent/50 bg-accent/5"}`}
+            className={`border-2 ${result.risk_score > 0 ? "border-destructive/50 bg-destructive/5" : "border-accent/50 bg-accent/5"}`}
           >
-            <CardContent className="pt-6">
+            <CardContent>
               <div className="flex items-start gap-4">
                 <div className={`${getRiskColor(result.risk_level)} mt-1`}>
                   {getRiskIcon(result.risk_level)}
@@ -199,19 +167,22 @@ export function UrlScanner() {
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="text-2xl font-bold">
-                      {result.is_suspicious
+                      {result.risk_score > 0
                         ? "Suspicious URL Detected"
                         : "URL Appears Safe"}
                     </h3>
                     <Badge
-                      variant={result.is_suspicious ? "destructive" : "default"}
+                      variant={
+                        result.risk_score > 0 ? "destructive" : "default"
+                      }
                       className="text-sm px-3 py-1"
                     >
                       {result.risk_level.toUpperCase()} RISK
                     </Badge>
                   </div>
                   <p className="text-muted-foreground font-mono text-sm break-all">
-                    {result.url}
+                    {/* DO THE COLORING HERE. */}
+                    <HighlightedUrl result={result}></HighlightedUrl>
                   </p>
                 </div>
               </div>
@@ -229,48 +200,53 @@ export function UrlScanner() {
                 <DetectionFlag
                   label="Suspicious Keywords"
                   active={result.suspicious_flags.has_suspicious_keywords}
-                  matches={result.matched_keywords}
+                  matches={Object.entries(result.payload.keywords.keywords).map(
+                    ([word, count]) => {
+                      return `${word} x${count}`;
+                    },
+                  )}
                 />
                 <DetectionFlag
                   label="Symbol Abuse"
                   active={result.suspicious_flags.has_symbol_abuse}
+                  matches={Object.entries(result.payload.symbols.symbols).map(
+                    ([word, count]) => {
+                      return `${word} x${count}`;
+                    },
+                  )}
                 />
                 <DetectionFlag
                   label="IP Address"
                   active={result.suspicious_flags.has_ip_address}
+                  matches={
+                    result.payload.ip.ip ? [result.payload.ip.ip] : undefined
+                  }
                 />
                 <DetectionFlag
                   label="Suspicious TLD"
                   active={result.suspicious_flags.has_suspicious_tld}
+                  matches={result.payload.domain.matched_subdomains}
                 />
-                <DetectionFlag
-                  label="Encoded Characters"
-                  active={result.suspicious_flags.has_encoded_chars}
-                />
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* DFA Analysis */}
-          <Card className="bg-card/50">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
-                DFA State Analysis
-              </CardTitle>
-              <CardDescription>
-                State transitions and pattern matching for each automaton
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <CardDescription>
-                Visualizations are a work-in-progress.
-              </CardDescription>
-              {/*
-              {result.dfa_analysis.map((dfa, index) => (
-                <DFACard key={index} dfa={dfa} />
-              ))}
-							*/}
+                <div className="p-4 rounded-lg border gap-2 col-span-2">
+                  <span className="font-medium text-sm">
+                    Encoded Characters
+                  </span>
+                  <div className="my-2"></div>
+                  <div className="flex flex-row w-full gap-3">
+                    <DetectionFlag
+                      label="High Risk"
+                      active={result.suspicious_flags.has_encoded_chars}
+                      matches={result.payload.encoded.high_risk}
+                    />
+                    <DetectionFlag
+                      label="Low Risk"
+                      active={result.suspicious_flags.has_encoded_chars}
+                      matches={result.payload.encoded.low_risk}
+                    />
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </>
@@ -290,7 +266,7 @@ function DetectionFlag({
 }) {
   return (
     <div
-      className={`p-4 rounded-lg border ${active ? "border-destructive/50 bg-destructive/5" : "border-border bg-card/30"}`}
+      className={`flex-1 p-4 rounded-lg border ${active ? "border-destructive/50 bg-destructive/5" : "border-border bg-card/30"}`}
     >
       <div className="flex items-center gap-2 mb-1">
         {active ? (
@@ -313,6 +289,8 @@ function DetectionFlag({
   );
 }
 
+{
+  /*
 function DFACard({ dfa }: { dfa: DFAAnalysis }) {
   return (
     <div className="p-4 rounded-lg border border-border bg-background/50">
@@ -355,4 +333,6 @@ function DFACard({ dfa }: { dfa: DFAAnalysis }) {
       </div>
     </div>
   );
+}
+*/
 }
