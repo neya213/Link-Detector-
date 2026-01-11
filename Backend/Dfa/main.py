@@ -3,6 +3,8 @@ from typing import TypedDict
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, validator
+
+from Dfa.dfa_visualization import DfaVisualizations
 from .detector import DfaPayload, SuspiciousFlags, unified_phishing_detector
 from .dfa_keywords import SUSPICIOUS_KEYWORDS_WEIGHTS
 from urllib.parse import urlparse
@@ -86,6 +88,7 @@ class ScanResult(TypedDict):
     risk_score: float
     suspicious_flags: SuspiciousFlags
     redirects: HTTPRedirect | None
+    visualizations: DfaVisualizations
     payload: DfaPayload
 
 
@@ -116,7 +119,7 @@ async def scan_url(request: URLRequest) -> ScanResult:
         except Exception as e:
             print(f"Error: {e}")
 
-        risk_score, indicators, verdict, payload = unified_phishing_detector(final_url)
+        risk_score, indicators, verdict, payload, visualizations = unified_phishing_detector(final_url)
         
         matched_keywords: list[str] = []
         text_lower = request.url.lower()
@@ -143,6 +146,7 @@ async def scan_url(request: URLRequest) -> ScanResult:
             "risk_level": risk_level_map.get(verdict, "medium"),
             "suspicious_flags": indicators,
             "redirects": redirect,
+            "visualizations": visualizations,
             "payload": payload,
         }
     except Exception as e:

@@ -45,4 +45,19 @@ export interface ScanResult {
     final_url: string;
   };
   payload: Payload;
+  visualizations: DfaVisualizations;
+}
+
+export interface DfaVisualization {
+  detected: boolean;
+  method: string;
+  states_visited: string[];
+}
+
+export interface DfaVisualizations {
+  keywords: DfaVisualization;
+  symbols: DfaVisualization;
+  ip_address: DfaVisualization;
+  tld: DfaVisualization;
+  encoding: DfaVisualization;
 }

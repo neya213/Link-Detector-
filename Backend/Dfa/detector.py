@@ -1,5 +1,7 @@
 import pprint
 from typing import Literal, TypedDict
+
+from .dfa_visualization import build_dfa_visualizations, DfaVisualizations
 from .dfa_keywords import dfa_keywords, KeywordDfaResult
 from .dfa_symbols import dfa_symbols, SymbolsDfaResult
 from .dfa_ip import dfa_ip, IPDfaResult
@@ -20,9 +22,8 @@ class DfaPayload(TypedDict):
     domain: DomainDfaResult
     encoded: EncodedDfaResult
 
-# TODO: refine unified_phishing_detector to pass the DfaResults in the frontend as well.
 
-def unified_phishing_detector(url: str) -> tuple[float, SuspiciousFlags, Literal["SAFE", "SUSPICIOUS", "HIGH RISK / PHISHING"], DfaPayload]:
+def unified_phishing_detector(url: str) -> tuple[float, SuspiciousFlags, Literal["SAFE", "SUSPICIOUS", "HIGH RISK / PHISHING"], DfaPayload, DfaVisualizations]:
     """
     Analyzes a URL for phishing indicators using DFA-based detection methods.
     Returns: total_score, flags dict, verdict string
@@ -68,5 +69,6 @@ def unified_phishing_detector(url: str) -> tuple[float, SuspiciousFlags, Literal
         encoded=encoded,
         keywords=keywords,
     )
+    visualizations = build_dfa_visualizations(keywords, symbols, ip, domain, encoded)
 
-    return total_score, flags, verdict, payload
+    return total_score, flags, verdict, payload, visualizations

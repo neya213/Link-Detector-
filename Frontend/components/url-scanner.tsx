@@ -23,7 +23,7 @@ import {
   Activity,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ScanResult } from "@/components/types";
+import { ScanResult, DfaVisualizations } from "@/components/types";
 import { HighlightedUrl } from "./highlighter";
 
 interface DFAAnalysis {
@@ -188,10 +188,7 @@ export function UrlScanner() {
                       {result.risk_level.toUpperCase()} RISK
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground font-mono text-sm break-all">
-                    {/* DO THE COLORING HERE. */}
-                    <HighlightedUrl result={result}></HighlightedUrl>
-                  </p>
+                  <HighlightedUrl result={result}></HighlightedUrl>
                 </div>
               </div>
             </CardContent>
@@ -270,9 +267,9 @@ export function UrlScanner() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <CardDescription>
-                Visualizations are a work-in-progress.
-              </CardDescription>
+              <DFAResultsPanel
+                visualizations={result.visualizations}
+              ></DFAResultsPanel>
               {/*
               {result.dfa_analysis.map((dfa, index) => (
                 <DFACard key={index} dfa={dfa} />
@@ -318,6 +315,35 @@ function DetectionFlag({
       )}
     </div>
   );
+}
+
+function DFAResultsPanel({
+  visualizations,
+}: {
+  visualizations: DfaVisualizations;
+}) {
+  const dfaList = mapDfaVisualizationsToFrontend(visualizations);
+
+  return (
+    <div className="space-y-3">
+      {dfaList.map((dfa, index) => (
+        <DFACard key={index} dfa={dfa} />
+      ))}
+    </div>
+  );
+}
+
+// function to map new backend data into old frontend presentation
+function mapDfaVisualizationsToFrontend(
+  visualizations: DfaVisualizations,
+): DFAAnalysis[] {
+  return Object.entries(visualizations).map(([key, viz]) => ({
+    dfa_name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), // Capitalize words
+    result: viz.detected,
+    states_visited: viz.states_visited,
+    final_state: viz.states_visited[viz.states_visited.length - 1] || "q0",
+    matched_pattern: (viz as any).matched_pattern || undefined, // optional
+  }));
 }
 
 function DFACard({ dfa }: { dfa: DFAAnalysis }) {
