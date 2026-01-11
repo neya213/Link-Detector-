@@ -28,10 +28,9 @@ def dfa_domain(text: str) -> DomainDfaResult:
     domain = domain.split(":")[0]  # remove port if present
     labels = domain.split(".")
 
-    # ignore the main domain and TLD; focus on subdomains
-    subdomains = labels[:-2] if len(labels) > 2 else []
+    candidates = labels[:-1]
 
-    for label in subdomains:
+    for label in candidates:
         for token in SUSPICIOUS_DOMAIN_TOKENS:
             if token in label:
                 matched_subdomains.append(label)

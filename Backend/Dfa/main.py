@@ -1,8 +1,9 @@
+import pprint
 from typing import TypedDict
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, validator
-from .detector import SuspiciousFlags, unified_phishing_detector
+from .detector import DfaPayload, SuspiciousFlags, unified_phishing_detector
 from .dfa_keywords import SUSPICIOUS_KEYWORDS_WEIGHTS
 from urllib.parse import urlparse
 
@@ -73,13 +74,20 @@ def is_valid_url(url: str) -> bool:
     except Exception:
         return False
 
+
+class HTTPRedirect(TypedDict):
+    has_redirects: bool
+    previous_url: str
+    final_url: str
+
 class ScanResult(TypedDict):
     url: str
-    is_suspicious: bool
     risk_level: str
+    risk_score: float
     suspicious_flags: SuspiciousFlags
-    matched_keywords: list[str] | None
-    has_redirects: bool
+    redirects: HTTPRedirect | None
+    payload: DfaPayload
+
 
 @app.post("/scan")
 async def scan_url(request: URLRequest) -> ScanResult:
@@ -99,15 +107,16 @@ async def scan_url(request: URLRequest) -> ScanResult:
 
         final_url: str = request.url
         has_redirects = False
+        # this follows redirects 
         try:
             headers = {"User-Agent": "Mozilla/5.0"}
-            response = client.get(request.url, headers=headers, timeout=(2, 8)) # getting the long links from short links
+            response = client.get(request.url, headers=headers, timeout=(2, 4)) # getting the long links from short links
             has_redirects = True
             final_url = response.url
         except Exception as e:
             print(f"Error: {e}")
 
-        matches, indicators, risk = unified_phishing_detector(final_url)
+        risk_score, indicators, verdict, payload = unified_phishing_detector(final_url)
         
         matched_keywords: list[str] = []
         text_lower = request.url.lower()
@@ -120,14 +129,21 @@ async def scan_url(request: URLRequest) -> ScanResult:
             "SUSPICIOUS": "medium",
             "HIGH RISK / PHISHING": "high"
         }
+        redirect = HTTPRedirect(
+            has_redirects=has_redirects,
+            previous_url=request.url,
+            final_url=final_url
+        )
+
+        pprint.pprint(payload)
         
         return {
             "url": request.url,
-            "is_suspicious": matches > 0,
-            "risk_level": risk_level_map.get(risk, "medium"),
+            "risk_score": risk_score,
+            "risk_level": risk_level_map.get(verdict, "medium"),
             "suspicious_flags": indicators,
-            "matched_keywords": matched_keywords if matched_keywords else None,
-            "has_redirects": has_redirects
+            "redirects": redirect,
+            "payload": payload,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error scanning URL: {str(e)}")
