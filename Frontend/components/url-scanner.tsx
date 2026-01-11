@@ -26,6 +26,14 @@ import { toast } from "sonner";
 import { ScanResult } from "@/components/types";
 import { HighlightedUrl } from "./highlighter";
 
+interface DFAAnalysis {
+  dfa_name: string;
+  result: boolean;
+  states_visited: string[];
+  final_state: string;
+  matched_pattern?: string;
+}
+
 export function UrlScanner() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -249,6 +257,29 @@ export function UrlScanner() {
               </div>
             </CardContent>
           </Card>
+
+          {/* DFA Analysis */}
+          <Card className="bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                DFA State Analysis
+              </CardTitle>
+              <CardDescription>
+                State transitions and pattern matching for each automaton
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <CardDescription>
+                Visualizations are a work-in-progress.
+              </CardDescription>
+              {/*
+              {result.dfa_analysis.map((dfa, index) => (
+                <DFACard key={index} dfa={dfa} />
+              ))}
+							*/}
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
@@ -289,8 +320,6 @@ function DetectionFlag({
   );
 }
 
-{
-  /*
 function DFACard({ dfa }: { dfa: DFAAnalysis }) {
   return (
     <div className="p-4 rounded-lg border border-border bg-background/50">
@@ -333,6 +362,4 @@ function DFACard({ dfa }: { dfa: DFAAnalysis }) {
       </div>
     </div>
   );
-}
-*/
 }
