@@ -1,20 +1,24 @@
 from typing import TypedDict
 
-
-HIGH_RISK_ENCODED = [ # unicode chars
-    "%2e", "%2f", "%5c",        # . / \
-    "%00",                      # null byte
-    "%2e%2e",                   # ..
-    "%252e", "%252f",            # double encoded
-    "%40",                      # @
-    "%3f", "%26",               # ? &
+HIGH_RISK_ENCODED = [ 
+    "%00",                      # null byte (Critical)
+    "%2e%2e",                   # .. directory traversal
+    "%252e", "%252f",           # double encoded
+    "%40",                      # @ symbol
+    "%0a", "%0d",               # Newline injection (CRLFs)
+    "%3c", "%3e",               # < and > (XSS attempts)
+    "javascript:",              # Protocol handler
+    "data:",                    # Data URI
+    "vbscript:",                # VBScript
     "&#x", "&#",                # numeric HTML entities
+    "0x", "\\u",                # Hex/Unicode obfuscation
 ]
 
 LOW_RISK_ENCODED = [
-    "%20", "%3a", "%2f",        # common URL encodings
+    "%20", "%3a", "%2f",        # common URL encodings (space, :, /)
     "&amp;", "&lt;", "&gt;",
     "&quot;", "&apos;",
+    "%26", "%3f",               # & ?
 ]
 
 class EncodedDfaResult(TypedDict):
@@ -41,4 +45,3 @@ def dfa_encoded(text: str) -> EncodedDfaResult:
         high_risk=high_risk
     )
     return res
-

@@ -1,7 +1,4 @@
-
-
 from typing import TypedDict
-
 
 def is_valid_ip(ip_str: str):
     parts = ip_str.split(".")
@@ -21,6 +18,13 @@ def is_valid_ip(ip_str: str):
 
     return True
 
+def is_valid_ipv6(ip_str: str) -> bool:
+    if ip_str.count(":") < 2:
+        return False
+    
+    valid_chars = set("0123456789abcdef:")
+    return all(c in valid_chars for c in ip_str.lower())
+
 class IPDfaResult(TypedDict):
     ip: str | None
     risk_score: float
@@ -33,9 +37,16 @@ def dfa_ip(text: str) -> IPDfaResult:
     else:
         host = text.split("/", 1)[0]
 
-    host = host.split(":", 1)[0]
+    if "[" in host and "]" in host:
+        host_check = host.split("]")[0].replace("[", "")
+        if is_valid_ipv6(host_check):
+            return IPDfaResult(ip=host_check, risk_score=5)
+    else:
+        host_check = host.split(":", 1)[0]
+        if is_valid_ip(host_check):
+            return IPDfaResult(ip=host_check, risk_score=5)
 
     return IPDfaResult(
-        ip=host if is_valid_ip(host) else None,
-        risk_score=5 if is_valid_ip(host) else 0
+        ip=None,
+        risk_score=0
     )
