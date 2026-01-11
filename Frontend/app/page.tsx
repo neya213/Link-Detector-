@@ -36,7 +36,7 @@ export default function Home() {
             <span className="font-mono">Automata Theory Project</span>
           </div>
           <h2 className="text-5xl md:text-6xl font-bold tracking-tight text-balance">
-            Advanced Phishing Detection Using <span className="text-primary">Finite Automata</span>
+            URL Phishing Detection Using <span className="text-primary">Deterministic Finite Automata</span>
           </h2>
           <p className="text-xl text-muted-foreground text-balance leading-relaxed">
             Analyze URLs in real-time using parallel Deterministic Finite Automata. See state transitions, pattern
