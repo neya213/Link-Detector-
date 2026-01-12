@@ -11,7 +11,6 @@ SUSPICIOUS_SYMBOLS = [
     "~",                     # Old unix home directory indicators
     "+",                     # Often used in email aliases
     "%",                     # Encoding indicator
-    "=",                     # Parameter passing in weird places
     "xn--",                  # Punycode indicator (fake foreign letters)
     "|",                     # Pipe character
     "$",                     # Variable indicator

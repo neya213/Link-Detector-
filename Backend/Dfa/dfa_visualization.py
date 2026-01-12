@@ -3,7 +3,7 @@ from typing import TypedDict
 from .dfa_keywords import KeywordDfaResult
 from .dfa_symbols import SymbolsDfaResult
 from .dfa_ip import IPDfaResult
-from .dfa_tld import DomainDfaResult
+from .dfa_tld import TldDfaResult
 from .dfa_encoded import EncodedDfaResult
 
 class DfaVisualization(TypedDict):
@@ -23,7 +23,7 @@ def build_dfa_visualizations(
     keywords: KeywordDfaResult,
     symbols: SymbolsDfaResult,
     ip: IPDfaResult,
-    domain: DomainDfaResult,
+    domain: TldDfaResult,
     encoded: EncodedDfaResult
 ) -> DfaVisualizations:
 

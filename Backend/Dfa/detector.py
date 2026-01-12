@@ -5,7 +5,7 @@ from .dfa_visualization import build_dfa_visualizations, DfaVisualizations
 from .dfa_keywords import dfa_keywords, KeywordDfaResult
 from .dfa_symbols import dfa_symbols, SymbolsDfaResult
 from .dfa_ip import dfa_ip, IPDfaResult
-from .dfa_tld import dfa_domain, DomainDfaResult
+from .dfa_tld import dfa_tld, TldDfaResult
 from .dfa_encoded import dfa_encoded, EncodedDfaResult
 
 class SuspiciousFlags(TypedDict):
@@ -19,7 +19,7 @@ class DfaPayload(TypedDict):
     keywords: KeywordDfaResult
     symbols: SymbolsDfaResult
     ip: IPDfaResult
-    domain: DomainDfaResult
+    domain: TldDfaResult
     encoded: EncodedDfaResult
 
 
@@ -33,16 +33,16 @@ def unified_phishing_detector(url: str) -> tuple[float, SuspiciousFlags, Literal
     keywords: KeywordDfaResult = dfa_keywords(url)
     symbols: SymbolsDfaResult = dfa_symbols(url)
     ip: IPDfaResult = dfa_ip(url)
-    domain: DomainDfaResult = dfa_domain(url)
+    tld: TldDfaResult = dfa_tld(url)
     encoded: EncodedDfaResult = dfa_encoded(url)
 
-    encoded_risk_score = len(encoded["high_risk"]) + min(len(encoded["low_risk"]), 5) / 1.2
+    encoded_risk_score = min(len(encoded["high_risk"]) + min(len(encoded["low_risk"]), 5) / 1.2, 5)
 
     total_score = (
         keywords["risk_score"] +
         symbols["risk_score"] +
         ip["risk_score"] +
-        domain["risk_score"] +
+        tld["risk_score"] +
         encoded_risk_score
     )
 
@@ -51,24 +51,24 @@ def unified_phishing_detector(url: str) -> tuple[float, SuspiciousFlags, Literal
         "has_suspicious_keywords": bool(keywords["risk_score"] > 0),
         "has_symbol_abuse": bool(symbols["risk_score"] > 0),
         "has_ip_address": bool(ip["risk_score"] > 0),
-        "has_suspicious_tld": bool(domain["risk_score"] > 0),
+        "has_suspicious_tld": bool(tld["risk_score"] > 0),
         "has_encoded_chars": encoded["is_risky"]
     }
 
-    if total_score == 0:
+    if 0 <= total_score <= 5:
         verdict: Literal["SAFE", "SUSPICIOUS", "HIGH RISK / PHISHING"] = "SAFE"
-    elif total_score <= 5:
+    elif 6 <= total_score <= 12:
         verdict = "SUSPICIOUS"
     else:
         verdict = "HIGH RISK / PHISHING"
 
     payload = DfaPayload(
         ip=ip,
-        domain=domain,
+        domain=tld,
         symbols=symbols,
         encoded=encoded,
         keywords=keywords,
     )
-    visualizations = build_dfa_visualizations(keywords, symbols, ip, domain, encoded)
+    visualizations = build_dfa_visualizations(keywords, symbols, ip, tld, encoded)
 
     return total_score, flags, verdict, payload, visualizations

@@ -20,11 +20,11 @@ TYPO_TARGETS = [
     "linked1n", "micr0soft", "apple-id", "icl0ud"
 ]
 
-class DomainDfaResult(TypedDict):
+class TldDfaResult(TypedDict):
     risk_score: float
     matched_subdomains: list[str]
 
-def dfa_domain(text: str) -> DomainDfaResult:
+def dfa_tld(text: str) -> TldDfaResult:
     """
     Scores a URL based on suspicious subdomains, TLDs, or typosquatting.
     """
@@ -67,7 +67,7 @@ def dfa_domain(text: str) -> DomainDfaResult:
                 score += 1.0
                 break 
 
-    return DomainDfaResult(
-        risk_score=score,
+    return TldDfaResult(
+        risk_score=min(score, 10),
         matched_subdomains=matched_subdomains
     )
