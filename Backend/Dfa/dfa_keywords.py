@@ -23,8 +23,7 @@ SUSPICIOUS_KEYWORDS_WEIGHTS = {
     # --- Logistics & Shipping (High Weight - Very Common) ---
     "delivery": 2, "shipping": 2, "parcel": 2, "package": 2,
     "tracking": 2, "shipment": 2, "courier": 2, "address": 1,
-    "ups": 2, "usps": 2, "fedex": 2, "dhl": 2, "postal": 2,
-    "customs": 2, "fee": 2, "pending": 2,
+    "postal": 2, "customs": 2, "fee": 2, "pending": 2,
 
     # --- Enterprise & HR (Targeting Students/Employees) ---
     "payroll": 3, "hr": 2, "human-resources": 2, "salary": 2,
@@ -32,22 +31,12 @@ SUSPICIOUS_KEYWORDS_WEIGHTS = {
     "intranet": 2, "vpn": 2, "citrix": 2, "okta": 3, "sso": 3,
     "docusign": 3, "document": 1, "shared": 1, "file": 1,
 
-    # --- Cloud Storage Brands ---
-    "dropbox": 2, "onedrive": 2, "sharepoint": 3, "adobe": 2,
-    "icloud": 2, "wetransfer": 2, "drive": 1, "docs": 1,
-
-    # --- Social & Streaming (Credential Harvesting) ---
-    "netflix": 2, "spotify": 2, "linkedin": 2, "discord": 2,
-    "tiktok": 2, "facebook": 2, "meta": 2, "instagram": 2, 
-    "twitch": 2, "steam": 2, "roblox": 2,
-
     # --- Security & Tech Spoofing ---
     "secure": 1, "security": 1, "protect": 1, "protection": 1,
     "auth": 2, "authentication": 2, "authenticator": 2,
     "update": 1, "upgrade": 1, "support": 1, "service": 1,
     "account": 1, "client": 1, "user": 1, "admin": 3,
     "password": 3, "credential": 3, "recovery": 2,
-    "microsoft": 2, "office365": 3, "outlook": 2, "google": 2, "apple": 2,
 
     # --- Threat/Fear Tactics ---
     "violation": 3, "banned": 3, "legal": 2, "warrant": 3,

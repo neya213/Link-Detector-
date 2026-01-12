@@ -13,7 +13,6 @@ SUSPICIOUS_SYMBOLS = [
     "%",                     # Encoding indicator
     "=",                     # Parameter passing in weird places
     "xn--",                  # Punycode indicator (fake foreign letters)
-    "0",                     # Zero often replaces 'O' in homograph attacks
     "|",                     # Pipe character
     "$",                     # Variable indicator
 ]
